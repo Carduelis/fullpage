@@ -26,10 +26,14 @@
 					background: #333;
 					transition: transform 300ms;
 					will-change: transform;
+					transition-timing-function: ease-in-out;
+					transition-timing-function: cubic-bezier(0.77,.01,.24,1);
 				}
 				.slide {
 					height: 100vh;
 					display: flex;
+					transition: transform 300ms;
+					will-change: transform;
 					background-color: #373;
 					align-items: center;
 					font-size: 14em;

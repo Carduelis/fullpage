@@ -28,6 +28,7 @@ class FullpageSlider {
 	constructor(node) {
 		this.data = {
 			node,
+			timeoutId: null,
 			lastTimeScroll: new Date().getTime()
 		};
 		for (let i = 8; i < 10; i++) {
@@ -54,12 +55,30 @@ class FullpageSlider {
 		if (nextSlideCodes.includes(code)) {
 			if (currentSlide < slides.length - 1) {
 				this.doScroll(1, 350)
+			} else {
+				this.doBounceDown();
 			}
 		} else if (prevSlideCodes.includes(code)) {
 			if (currentSlide > 0) {
 				this.doScroll(-1, 350)
+			} else {
+				this.doBounceUp();
 			}
 		}
+	}
+	doBounceDown() {
+		const lastSlide = this.data.slides[this.data.slides.length - 1];
+		lastSlide.style.transform = `translateY(-5%)`;
+		this.data.timeoutId = setTimeout(() => {
+			lastSlide.style.transform = null;
+		}, 100);
+	}
+	doBounceUp() {
+		const firstSlide = this.data.slides[0];
+		firstSlide.style.transform = `translateY(5%)`;
+		this.data.timeoutId = setTimeout(() => {
+			firstSlide.style.transform = null;
+		}, 100);
 	}
 	onWheel(event) {
 		const { wheelDeltaY, wheelDeltaX, wheelDelta } = event;
@@ -72,16 +91,25 @@ class FullpageSlider {
 	}
 	scrollUp(delta) {
 		const { currentSlide } = this.data;
-		if (Math.abs(delta) > 0 && currentSlide > 0) {
-			console.log('scrollUp')
-			this.doScroll(-1)
+		if (Math.abs(delta) > 0) {
+			if (currentSlide > 0) {
+				console.log('scrollUp')
+				this.doScroll(-1)
+			} else {
+				this.doBounceUp()
+			}
 		}
+
 	}
 	scrollDown(delta) {
 		const { currentSlide, slides } = this.data;
-		if (Math.abs(delta) > 0 && currentSlide < slides.length -1) {
-			console.log('scrollDown');
-			this.doScroll(1);
+		if (Math.abs(delta) > 0) {
+			if(currentSlide < slides.length -1) {
+				console.log('scrollDown');
+				this.doScroll(1);
+			} else {
+				this.doBounceDown()
+			}
 		}
 	}
 	doScroll(delta, delayToAction = 700) {
