@@ -19,7 +19,8 @@ module.exports = {
 	plugins: [
 		new CleanWebpackPlugin(['dist']),
 		new HtmlWebpackPlugin({
-			title: 'Development'
+			title: 'Common name for both webpack configs',
+			template: 'src/index.html'
 		}),
 		// new webpack.optimize.CommonsChunkPlugin({
     //   name: 'common' // Specify the common bundle's name.

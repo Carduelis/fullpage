@@ -21,7 +21,8 @@
   "homepage": "https://github.com/Carduelis/fullpage#readme",
   "dependencies": {
     "babel-loader": "^7.1.4",
-    "babel-polyfill": "^6.26.0"
+    "babel-polyfill": "^6.26.0",
+    "debounce": "^1.1.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

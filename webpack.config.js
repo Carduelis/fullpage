@@ -23,7 +23,9 @@ const webpack = require('webpack')
     plugins: [
       new CleanWebpackPlugin(['dist']),
       new HtmlWebpackPlugin({
-        title: 'Development'
+        title: 'Common name for both webpack configs',
+				filename: 'index.html',
+				template: 'src/index.html'
       }),
 			new webpack.NamedModulesPlugin(),
      new webpack.HotModuleReplacementPlugin()
