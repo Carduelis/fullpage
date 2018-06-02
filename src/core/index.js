@@ -45,23 +45,33 @@ class FullpageSlider {
             eventName => {
                 document.addEventListener(eventName, event => {
                     event.stopPropagation();
+                    // event.preventDefault();
                 });
             }
         );
-        let lastY = 0;
-        document.addEventListener("touchmove", event => {
-            let currentY = event.touches[0].clientY;
-            console.log("lastY", Math.round(lastY));
-            console.log("currentY", Math.round(lastY));
-            console.log("delta", Math.round(lastY - currentY));
-            if (currentY > lastY) {
-                console.log("down");
+        let start = 0;
+        let end = 0;
+        const onTouchMove = event => {
+            end = event.touches[0].pageY;
+            const distance = end - start;
+            if (distance < -30) {
                 this.scroll(-1);
-            } else if (currentY < lastY) {
+            }
+            if (distance > 30) {
                 this.scroll(1);
             }
-            lastY = currentY;
-        });
+        };
+        const onTouchEnd = event => {
+            document.removeEventListener("touchmove", onTouchMove);
+            document.removeEventListener("touchend", onTouchEnd);
+        };
+        const onTouchStart = event => {
+            start = event.touches[0].pageY;
+            document.addEventListener("touchmove", onTouchMove);
+            document.addEventListener("touchend", onTouchEnd);
+        };
+        document.addEventListener("touchstart", onTouchStart);
+
         this.sliderDidMount(this.props);
     }
     destroy() {
@@ -115,6 +125,8 @@ class FullpageSlider {
         this.scroll(wheelDeltaY);
     };
     scroll = wheelDeltaY => {
+        // delta > 0 -> up
+        // delta < 0 -> down
         const { currentSlide } = this.props;
         if (Math.abs(wheelDeltaY) > 0) {
             if (currentSlide > 0 && wheelDeltaY > 0) {

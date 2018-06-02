@@ -3,6 +3,8 @@
 
 <head>
 	<meta charset="UTF-8">
+	<meta name="theme-color" content="#373">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>
 		<%-htmlWebpackPlugin.options.title%>
 	</title>
@@ -53,19 +55,49 @@
 			right: 0;
 			bottom: 0;
 		}
+
+		html,
+		body {
+			/* prevent auto-hiding address-bar */
+			height: 100%;
+			overflow: hidden;
+		}
+
+		.vh-test {
+			position: fixed;
+			z-index: 1000;
+			width: 5rem;
+			left: 0;
+			top: 0;
+		}
+
+		.vh-test>div {
+			height: 10vh;
+			width: 100%;
+			box-shadow: inset 0 0 1px;
+		}
+
+		input {
+			position: relative;
+			z-index: 11199;
+		}
+
+		body {
+			/* prevent pull-to-refresh */
+			overscroll-behavior: contain;
+		}
 	</style>
 </head>
 
 <body>
-	<pre id="test"></pre>
 	<div id="root">
-		<div class="slider-navigation" id="sliderNav">
-
-		</div>
 		<div class="slider">
 			<div class="slider-list" id="slider">
-				<div class="slide">0</div>
-				<div class="slide">1</div>
+				<div class="slide">0
+				</div>
+				<div class="slide">1
+
+				</div>
 				<div class="slide">2</div>
 				<div class="slide">3</div>
 				<div class="slide">4</div>
