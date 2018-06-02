@@ -1,6 +1,7 @@
 import debounce from "debounce";
 import { NEXT_SLIDE_CODES, PREV_SLIDE_CODES } from "../constants";
 import onChange from "../helpers/onChange";
+import transitionEnd from "../helpers/transitionEnd";
 import { isDevelopment } from "../helpers/env";
 
 class FullpageSlider {
@@ -38,8 +39,29 @@ class FullpageSlider {
             currentSlide: startSlide
         });
         isDevelopment && console.log(node);
-        node.addEventListener("wheel", debounce(this.onWheel, 20));
+        node.addEventListener("wheel", this.onWheel);
         document.addEventListener("keydown", this.onKeydown);
+        ["touchstart", "touchmove", "touchcancel", "touchend"].forEach(
+            eventName => {
+                document.addEventListener(eventName, event => {
+                    event.stopPropagation();
+                });
+            }
+        );
+        let lastY = 0;
+        document.addEventListener("touchmove", event => {
+            let currentY = event.touches[0].clientY;
+            console.log("lastY", Math.round(lastY));
+            console.log("currentY", Math.round(lastY));
+            console.log("delta", Math.round(lastY - currentY));
+            if (currentY > lastY) {
+                console.log("down");
+                this.scroll(-1);
+            } else if (currentY < lastY) {
+                this.scroll(1);
+            }
+            lastY = currentY;
+        });
         this.sliderDidMount(this.props);
     }
     destroy() {
@@ -47,12 +69,9 @@ class FullpageSlider {
         this.node.removeEventListener("transitionend", this.onTransitionEnd);
     }
     onTransitionEnd = event => {
-        const { target, propertyName } = event;
-        const EVENT_IS_ON_SLIDE_LIST = target === this.node;
-        const IS_TRANFORM_TRANSITION = propertyName === "transform";
-        if (EVENT_IS_ON_SLIDE_LIST && IS_TRANFORM_TRANSITION) {
+        transitionEnd(event, this.node, "transform", event => {
             this.sliderTransitionEnded(this.props, event);
-        }
+        });
     };
     onKeydown = event => {
         const { currentSlide } = this.props;
@@ -91,20 +110,21 @@ class FullpageSlider {
     onWheel = event => {
         const { wheelDeltaY, wheelDeltaX, wheelDelta } = event;
         isDevelopment && console.log("wheel fired");
+        const { currentSlide, lastTimeScroll } = this.props;
+        isDevelopment && console.warn(wheelDeltaY);
         this.scroll(wheelDeltaY);
     };
-    scroll = delta => {
-        const { currentSlide, lastTimeScroll } = this.props;
-        // isDevelopment && console.warn(delta);
-        if (Math.abs(delta) > 0) {
-            if (currentSlide > 0 && delta < 0) {
+    scroll = wheelDeltaY => {
+        const { currentSlide } = this.props;
+        if (Math.abs(wheelDeltaY) > 0) {
+            if (currentSlide > 0 && wheelDeltaY > 0) {
                 isDevelopment &&
                     console.log("%cscrollUp", "background: yellow");
                 this.tryDoSlide(-1);
             } else {
                 this.doBounceUp();
             }
-            if (currentSlide < this.slides.length - 1 && delta > 0) {
+            if (currentSlide < this.slides.length - 1 && wheelDeltaY < 0) {
                 isDevelopment &&
                     console.log("%cscrollDown", "background: lime");
                 this.tryDoSlide(1);
