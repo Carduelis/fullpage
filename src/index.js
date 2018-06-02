@@ -26,12 +26,6 @@ class FullpageSlider {
 			timeoutId: null,
 			lastSuccessScrollTime: new Date().getTime()
 		};
-		for (let i = 8; i < 10; i++) {
-			const clonedChild = node.children[0].cloneNode();
-			clonedChild.innerHTML = i;
-			clonedChild.style.backgroundColor = `hsl(${i*20}, 50%, 50%)`
-			node.appendChild(clonedChild)
-		}
 		this.onWheel = this.onWheel.bind(this)
 		this.onKeydown = this.onKeydown.bind(this)
 	}
