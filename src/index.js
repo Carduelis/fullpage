@@ -1,5 +1,5 @@
 import debounce from 'debounce';
-
+import forEachNode from './forEachNode';
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
@@ -9,11 +9,6 @@ if (isProduction) {
 	console.log('Looks like we are in development mode!');
 }
 
-const forEachNode = function (array, callback, scope) {
-  for (let i = 0; i < array.length; i++) {
-    callback.call(scope, array[i], i, array); // passes back stuff we need
-  }
-};
 
 
 document.addEventListener("DOMContentLoaded", e => {
@@ -29,7 +24,7 @@ class FullpageSlider {
 		this.data = {
 			node,
 			timeoutId: null,
-			lastTimeScroll: new Date().getTime()
+			lastSuccessScrollTime: new Date().getTime()
 		};
 		for (let i = 8; i < 10; i++) {
 			const clonedChild = node.children[0].cloneNode();
@@ -54,18 +49,19 @@ class FullpageSlider {
 		const prevSlideCodes = ['ArrowUp', 'ArrowLeft', 'Numpad8', 'Numpad4'];
 		if (nextSlideCodes.includes(code)) {
 			if (currentSlide < slides.length - 1) {
-				this.doScroll(1, 350)
+				this.doSlide(1, 350)
 			} else {
 				this.doBounceDown();
 			}
 		} else if (prevSlideCodes.includes(code)) {
 			if (currentSlide > 0) {
-				this.doScroll(-1, 350)
+				this.doSlide(-1, 350)
 			} else {
 				this.doBounceUp();
 			}
 		}
 	}
+
 	doBounceDown() {
 		const lastSlide = this.data.slides[this.data.slides.length - 1];
 		lastSlide.style.transform = `translateY(-5%)`;
@@ -83,51 +79,57 @@ class FullpageSlider {
 	onWheel(event) {
 		const { wheelDeltaY, wheelDeltaX, wheelDelta } = event;
 		console.log('wheel fired')
-		if (wheelDeltaY < 0) {
-			this.scrollDown(wheelDeltaY)
-		} else {
-			this.scrollUp(wheelDeltaY)
-		}
+		// if (wheelDeltaY < 0) {
+		// 	this.scrollDown(wheelDeltaY)
+		// } else {
+		// 	this.scrollUp(wheelDeltaY)
+		// }
+		this.scroll(wheelDeltaY)
 	}
-	scrollUp(delta) {
-		const { currentSlide } = this.data;
+	scroll(delta) {
+		const { currentSlide, slides, lastTimeScroll } = this.data;
+		console.warn(delta)
 		if (Math.abs(delta) > 0) {
-			if (currentSlide > 0) {
-				console.log('scrollUp')
-				this.doScroll(-1)
+			if (currentSlide > 0 && delta < 0) {
+				console.log('%cscrollUp', 'background: yellow')
+				this.doSlide(-1)
 			} else {
 				this.doBounceUp()
 			}
-		}
-
-	}
-	scrollDown(delta) {
-		const { currentSlide, slides } = this.data;
-		if (Math.abs(delta) > 0) {
-			if(currentSlide < slides.length -1) {
-				console.log('scrollDown');
-				this.doScroll(1);
+			if(currentSlide < slides.length -1 && delta > 0) {
+				console.log('%cscrollDown', 'background: lime');
+				this.doSlide(1);
 			} else {
 				this.doBounceDown()
 			}
 		}
 	}
-	doScroll(delta, delayToAction = 700) {
+	setSucceedScrolltime() {
+		this.lastSuccessScrollTime = new Date().getTime()
+	}
+	setAttemptToScrollTime() {
+		this.lastAttemptToScrollTime = new Date().getTime();
+	}
+	isAllowedToScroll(delay = 700) {
+		return this.lastAttemptToScrollTime - this.lastSuccessScrollTime > delay
+	}
+	changeCurrentSlideBy(delta) {
+		this.data.currentSlide += delta;
+		this.setSucceedScrolltime();
+	}
+	doSlide(delta) {
 		const { data } = this;
-		const { slides, node } = data;
-		const { currentSlide, lastTimeScroll } = data;
-		const SCROLL_TIME = new Date().getTime()
-		const TIME_SINCE_LAST_SCROLL = SCROLL_TIME - lastTimeScroll;
-		if (TIME_SINCE_LAST_SCROLL > delayToAction) {
-			data.currentSlide += delta;
-			data.lastTimeScroll = SCROLL_TIME
+		const { slides, node, currentSlide, lastSuccessScrollTime } = data;
+		this.setAttemptToScrollTime();
+		if (this.isAllowedToScroll()) {
+			this.changeCurrentSlideBy(delta);
 			console.log('scroll after', TIME_SINCE_LAST_SCROLL)
 			this.printDebug();
 			const translateY = 100*(data.currentSlide)/this.data.slides.length;
 			console.log(data.currentSlide, slides.length)
 			node.style.transform = `translateY(-${translateY}%)`
 		} else {
-			console.log('too early to scroll')
+			console.log('too early for sliding')
 		}
 	}
 	printDebug() {
