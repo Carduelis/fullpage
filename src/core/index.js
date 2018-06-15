@@ -3,10 +3,12 @@ import { NEXT_SLIDE_CODES, PREV_SLIDE_CODES } from "../constants";
 import onChange from "../helpers/onChange";
 import transitionEnd from "../helpers/transitionEnd";
 import { isDevelopment } from "../helpers/env";
+// const isDevelopment = false;
 
 class FullpageSlider {
-    constructor(node) {
+    constructor(node, { startSlide = 0 } = {}) {
         const props = {
+            currentSlide: startSlide,
             timeoutId: null,
             lastSuccessScrollTime: new Date().getTime()
         };
@@ -19,10 +21,11 @@ class FullpageSlider {
         );
         this.props = onChange(props, (target, property, { value }) => {
             if (property === "currentSlide") {
-                console.log(`property ${property} has been set to`, value);
+                isDevelopment &&
+                    console.log(`property ${property} has been set to`, value);
                 const translateY = 100 * value / this.slides.length;
                 this.node.style.transform = `translateY(-${translateY}%)`;
-                this.sliderDidTrigger(this.props);
+                this.sliderDidTrigger(this.getExportProps());
             }
         });
     }
@@ -34,12 +37,12 @@ class FullpageSlider {
             this.setProp(key, value);
         });
     }
-    init(node = this.node, startSlide = 0) {
-        this.setProps({
-            currentSlide: startSlide
-        });
-        isDevelopment && console.log(node);
-        node.addEventListener("wheel", this.onWheel);
+    init() {
+        // this.setProps({
+        //     currentSlide: this.props.currentSlide
+        // });
+        isDevelopment && console.log(this.node);
+        this.node.addEventListener("wheel", this.onWheel);
         document.addEventListener("keydown", this.onKeydown);
         ["touchstart", "touchmove", "touchcancel", "touchend"].forEach(
             eventName => {
@@ -72,15 +75,22 @@ class FullpageSlider {
         };
         document.addEventListener("touchstart", onTouchStart);
 
-        this.sliderDidMount(this.props);
+        this.sliderDidMount(this.getExportProps());
     }
     destroy() {
         document.removeEventListener("keydown", this.onKeydown);
         this.node.removeEventListener("transitionend", this.onTransitionEnd);
     }
+    getExportProps = () => {
+        return Object.assign({}, this.props, {
+            slider: this.node,
+            slides: this.slides,
+            slide: this.slides[this.props.currentSlide]
+        });
+    };
     onTransitionEnd = event => {
         transitionEnd(event, this.node, "transform", event => {
-            this.sliderTransitionEnded(this.props, event);
+            this.sliderTransitionEnded(this.getExportProps(), event);
         });
     };
     onKeydown = event => {
@@ -88,13 +98,13 @@ class FullpageSlider {
         const { code } = event;
         if (NEXT_SLIDE_CODES.includes(code)) {
             if (currentSlide < this.slides.length - 1) {
-                this.tryDoSlide(1, 350);
+                this.tryDoSlide(1);
             } else {
                 this.doBounceDown();
             }
         } else if (PREV_SLIDE_CODES.includes(code)) {
             if (currentSlide > 0) {
-                this.tryDoSlide(-1, 350);
+                this.tryDoSlide(-1);
             } else {
                 this.doBounceUp();
             }
@@ -150,7 +160,7 @@ class FullpageSlider {
             lastAttemptToScrollTime: new Date().getTime()
         });
     }
-    isAllowedToScroll(delay = 700) {
+    isAllowedToScroll(delay = 300) {
         const { lastAttemptToScrollTime, lastSuccessScrollTime } = this.props;
         return lastAttemptToScrollTime - lastSuccessScrollTime > delay;
     }
@@ -165,7 +175,7 @@ class FullpageSlider {
         }
     }
     doSlide(delta) {
-        this.sliderWillTrigger(this.props);
+        this.sliderWillTrigger(this.getExportProps());
         this.setProps({
             currentSlide: (this.props.currentSlide += delta),
             lastSuccessScrollTime: new Date().getTime()
